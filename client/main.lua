@@ -6,8 +6,8 @@ local function SpawnVehicle(model, plate, spawnPoint)
     SetVehicleNumberPlateText(veh, plate)
     SetEntityAsMissionEntity(veh, true, true)
     
-    -- Keys logic should go here (Export to rpa-vehiclekeys if it existed, or qb-vehiclekeys)
-    TriggerEvent("vehiclekeys:client:SetOwner", plate)
+    -- Keys logic 
+    exports['rpa-vehiclekeys']:GiveKeys(plate)
     exports['rpa-lib']:Notify("Vehicle Retrieved", "success")
     exports['rpa-fuel']:SetFuel(veh, 100) -- Full tank on retrieve
 end
