@@ -5,6 +5,7 @@ author 'RP-Alpha'
 description 'RP-Alpha Garage System'
 version '1.0.0'
 
+shared_script 'config.lua'
 client_script 'client/main.lua'
 server_script 'server/main.lua'
 
