@@ -1,5 +1,38 @@
 Config = {}
 
+--[[
+    ==========================================
+    PERMISSIONS
+    ==========================================
+    
+    server.cfg examples:
+    setr rpa_garages:admin "steam:110000123456789,license:abc123"
+    setr rpa_garages:impound "steam:110000987654321"
+]]
+
+-- Who can use garage admin commands
+Config.AdminPermissions = {
+    groups = {'admin', 'god'},
+    resourceConvar = 'admin'
+}
+
+-- Who can impound vehicles
+Config.ImpoundPermissions = {
+    groups = {'admin', 'god', 'mod'},
+    jobs = {'police', 'bcso', 'sasp'},
+    minGrade = 0,
+    onDuty = true,
+    resourceConvar = 'impound'
+}
+
+-- Who can release impounded vehicles (admins only by default)
+Config.ReleaseImpoundPermissions = {
+    groups = {'admin', 'god'},
+    jobs = {'police'},
+    minGrade = 3,
+    resourceConvar = 'release_impound'
+}
+
 Config.Garages = {
     ['legion_public'] = {
         label = "Legion Square Public Garage",
