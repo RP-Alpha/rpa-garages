@@ -1,6 +1,44 @@
+-- Helper function to load model with timeout
+local function LoadModel(model, timeout)
+    timeout = timeout or 5000
+    local hash = type(model) == 'string' and GetHashKey(model) or model
+    
+    if not IsModelValid(hash) then
+        print('[rpa-garages] Invalid model: ' .. tostring(model))
+        return false
+    end
+    
+    RequestModel(hash)
+    local startTime = GetGameTimer()
+    while not HasModelLoaded(hash) do
+        if GetGameTimer() - startTime > timeout then
+            print('[rpa-garages] Model load timeout: ' .. tostring(model))
+            return false
+        end
+        Wait(10)
+    end
+    return true
+end
+
+-- Trigger callback using framework bridge
+local function TriggerCallback(name, cb, ...)
+    local fwName = exports['rpa-lib']:GetFrameworkName()
+    
+    if fwName == 'qb-core' or fwName == 'qbox' then
+        exports['rpa-lib']:GetFramework().Functions.TriggerCallback(name, cb, ...)
+    elseif fwName == 'ox_core' then
+        if GetResourceState('ox_lib') == 'started' then
+            local result = lib.callback.await(name, false, ...)
+            cb(result)
+        end
+    end
+end
+
 local function SpawnVehicle(model, plate, spawnPoint)
-    RequestModel(model)
-    while not HasModelLoaded(model) do Wait(0) end
+    if not LoadModel(model) then
+        exports['rpa-lib']:Notify("Failed to load vehicle model", "error")
+        return
+    end
 
     local veh = CreateVehicle(model, spawnPoint.x, spawnPoint.y, spawnPoint.z, spawnPoint.w, true, false)
     SetVehicleNumberPlateText(veh, plate)
@@ -9,14 +47,18 @@ local function SpawnVehicle(model, plate, spawnPoint)
     -- Keys logic 
     exports['rpa-vehiclekeys']:GiveKeys(plate)
     exports['rpa-lib']:Notify("Vehicle Retrieved", "success")
-    exports['rpa-fuel']:SetFuel(veh, 100) -- Full tank on retrieve
+    
+    -- Full tank on retrieve (check if export exists)
+    if GetResourceState('rpa-fuel') == 'started' then
+        exports['rpa-fuel']:SetFuel(veh, 100)
+    end
 end
 
 local function OpenGarageMenu(garageId)
     local garage = Config.Garages[garageId]
     
-    -- Request vehicle list
-    exports['rpa-lib']:GetFramework().Functions.TriggerCallback('rpa-garages:server:GetVehicles', function(vehicles)
+    -- Request vehicle list using callback bridge
+    TriggerCallback('rpa-garages:server:GetVehicles', function(vehicles)
         local options = {}
         
         for _, v in pairs(vehicles) do
@@ -76,10 +118,13 @@ end
 
 CreateThread(function()
     for k, v in pairs(Config.Garages) do
-        -- Spawn Ped
+        -- Spawn Ped with timeout protection
+        if not LoadModel(v.ped.model) then
+            print('[rpa-garages] Failed to load ped model for garage: ' .. k)
+            goto continue
+        end
+        
         local hash = GetHashKey(v.ped.model)
-        RequestModel(hash)
-        while not HasModelLoaded(hash) do Wait(0) end
         local ped = CreatePed(4, hash, v.ped.coords.x, v.ped.coords.y, v.ped.coords.z, v.ped.coords.w, false, true)
         FreezeEntityPosition(ped, true)
         SetEntityInvincible(ped, true)
@@ -111,5 +156,7 @@ CreateThread(function()
         BeginTextCommandSetBlipName("STRING")
         AddTextComponentString("Garage")
         EndTextCommandSetBlipName(blip)
+        
+        ::continue::
     end
 end)
