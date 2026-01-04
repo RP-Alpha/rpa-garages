@@ -19,6 +19,15 @@
 - 🧑 **Valet Peds** - NPC interactions via Target
 - 🔑 **Key Integration** - Auto-gives keys via rpa-vehiclekeys
 - 📍 **Multi-Garage** - Support for multiple locations
+- 🔐 **Permission System** - Admin garage management
+
+---
+
+## 📦 Dependencies
+
+- `rpa-lib` (Required)
+- `rpa-vehiclekeys` (Recommended)
+- `ox_target` or `qb-target` (Recommended)
 
 ---
 
@@ -28,15 +37,24 @@
 2. Extract to your `resources` folder
 3. Add to `server.cfg`:
    ```cfg
+   ensure rpa-lib
    ensure rpa-garages
    ```
 
 ---
 
-## 🔗 Dependencies
+## ⚙️ Configuration
 
-- `rpa-lib` (Required)
-- `rpa-vehiclekeys` (Recommended)
+```lua
+Config.Garages = {
+    ['legion'] = {
+        label = "Legion Square Parking",
+        coords = vector3(215.0, -810.0, 30.0),
+        spawnCoords = vector4(220.0, -800.0, 30.0, 90.0),
+        vehicleType = 'car'  -- 'car', 'boat', 'air'
+    }
+}
+```
 
 ---
 
